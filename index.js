@@ -27,6 +27,7 @@ const execFilePromise = util.promisify(execFile)
  * @param {number} [properties.port] Server port
  * @param {string} [properties.pathname] URL path component
  * @param {string} [properties.search] URL query parameter
+ * @param {string} [properties.cropArea] URL query parameter
  * @returns {string} URL
  */
 function buildURL(properties = {}) {
@@ -38,7 +39,8 @@ function buildURL(properties = {}) {
     'hostname',
     'port',
     'pathname',
-    'search'
+    'search',
+    'cropArea'
   ]
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i]
@@ -67,6 +69,7 @@ function buildURL(properties = {}) {
  * @param {number} [options.port] Server port
  * @param {string} [options.pathname] URL path component
  * @param {string} [options.search] URL query parameter
+ * @param {string} [options.cropArea] Crop area for video
  * @returns {Array<string>} ffmpeg arguments list
  */
 function buildFFMPEGArgs(fileName, options = {}) {
@@ -97,6 +100,10 @@ function buildFFMPEGArgs(fileName, options = {}) {
   }
   if (options.pixelFormat) {
     args.push('-pix_fmt', options.pixelFormat)
+  }
+
+  if (options.cropArea){
+    args.push('-vf', `crop=${options.cropArea.width}:${options.cropArea.height}:${options.cropArea.x}:${options.cropArea.y}`)
   }
   args.push(fileName)
   return args
@@ -200,7 +207,8 @@ function recordScreen(fileName, options) {
       '0',
       '-metadata:s:v',
       'rotate=' + options.rotate,
-      tmpFileName
+      tmpFileName,
+      '-vf'
     ]
     return execFilePromise('ffmpeg', args).then(function() {
       fs.unlinkSync(fileName)
